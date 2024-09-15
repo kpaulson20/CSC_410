@@ -14,4 +14,9 @@ void displayMatrix(int matrix[N][N]) {
 
 void matrixMultiply(int A[N][N], int B[N][N], int C[N][N]) {
     // Write your code here
+    for (int i = 0; i < N; i++)
+    {
+        printf("%d", C[N][N]);
+    }
+    printf ("\n");
 }
