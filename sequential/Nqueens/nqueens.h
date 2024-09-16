@@ -15,7 +15,11 @@ bool isSafe(int board[], int row, int col, int n) {
 void solveNQueensUtil(int board[], int col, int n) {
     // Base case
         // write your code here
-
+        if (isSafe == true)
+        {
+            printf(board[n]);
+        }
+        return;
     // Recursive case
         // write your code here
 }
