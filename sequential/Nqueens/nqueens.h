@@ -17,12 +17,16 @@ void solveNQueensUtil(int board[], int col, int n) {
         // write your code here
         if (col >= n)
         {
-            //Print the board
             return;
         }
     // Recursive case
         // write your code here
-        //check the rows, colums, and diagonals for queen already placed
-        //If space empty and columns, rows, and diagonals dont interfere, place queen
-        //Repeat until no more can be placed, then return to the top to print result
+        for (int i = 0; i < n; i++)
+        {
+            if (isSafe(board, i, col, n))
+            {
+                board[col] = i;
+                solveNQueensUtil(board, col+1, n);
+            }
+        }
 }
