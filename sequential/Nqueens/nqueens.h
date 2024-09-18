@@ -32,7 +32,7 @@ void solveNQueensUtil(int board[], int col, int n) {
     // Recursive case
     // write your code here
     for (int i = 0; i < n; i++){
-            if (isSafe(board, i, col, n)){
+        if (isSafe(board, i, col, n)){
             board[col] = i;
             solveNQueensUtil(board, col + 1, n);
         }
