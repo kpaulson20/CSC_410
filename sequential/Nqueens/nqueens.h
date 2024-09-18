@@ -28,7 +28,9 @@ void solveNQueensUtil(int board[], int col, int n) {
             printf("\n");
         }
         printf("\n");
+        return;
     }
+
     // Recursive case
     // write your code here
     for (int i = 0; i < n; i++){
