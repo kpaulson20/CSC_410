@@ -2,7 +2,7 @@
 #include <pthread.h>
 
 #define SIZE 1000000
-#define NUM_THREADS 4
+#define NUM_THREADS 3
 
 int arr[SIZE];
 int partialSums[NUM_THREADS] = {0}; // Array to store partial sums for each thread
@@ -10,7 +10,8 @@ int partialSums[NUM_THREADS] = {0}; // Array to store partial sums for each thre
 // Entry function for each thread
 void* sumPart(void* arg) {
     // Divide the work for each thread based on their id and let them compute partial sums
-        // -----> Write your code here
+    // -----> Write your code here
+    
 }
 
 int main() {
@@ -23,11 +24,18 @@ int main() {
     int thread_ids[NUM_THREADS];
 
     // Create threads to compute partial sums
-        // ------> Write your code here
+    // ------> Write your code here
+    for (int i = 0; i < NUM_THREADS; i++) {
+        thread_ids[i] = i;
+        pthread_create(&threads[i], NULL, sumPart, (void *)&thread_ids[i]);
+    }
 
     // Wait for all threads to finish
-        // -------> Write your code here
-
+    // -------> Write your code here
+    for (int i = 0; i < NUM_THREADS; i++){
+        pthread_join(threads[i], NULL);
+    }
+        
     // Combine the partial sums from all threads
     int totalSum = 0;
     for (int i = 0; i < NUM_THREADS; i++) {

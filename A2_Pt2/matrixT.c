@@ -40,11 +40,15 @@ int main() {
 
         /** create threads with entry function matrixMultiplyThread 
             and pass thread_data[i] as an argument **/
-            // -----> write your code here
+        // -----> write your code here
+        pthread_create(&threads[i], NULL, matrixMultiplyThread, (void*)&thread_data[i]);
     }
 
     // Wait for all threads to complete
         // ------> write your code here
+    for (int i = 0; i < NUM_THREADS; i++){
+        pthread_join(threads[i], NULL);
+    }
 
     printf("Matrix multiplication complete!\n");
 
