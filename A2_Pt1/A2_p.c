@@ -14,23 +14,23 @@ int main() {
     // Create 4 child processes - 4 different characters adjusting shield power
             // Luke increases the shield power by 25
             printf("Luke: Adjusting shields...\n");
-            shield_power += 25;
-            printf("Luke: Shield Power level now at %d%%\n", shield_power);
+            int shield_power1 = shield_power + 25;
+            printf("Luke: Shield Power level now at %d%%\n", shield_power1);
 
             // Han increases the shield power by 20
             printf("Han: Adjusting shields...\n");
-            shield_power += 20;
-            printf("Han: Shield Power level now at %d%%\n", shield_power);
+            int shield_power2 = shield_power + 20;
+            printf("Han: Shield Power level now at %d%%\n", shield_power2);
 
             // Chewbacca increases the shield power by 30
             printf("Chewbacca: Adjusting shields...\n");
-            shield_power += 30;
-            printf("Chewbacca: Shield Power level now at %d%%\n", shield_power);
+            int shield_power3 = shield_power + 30;
+            printf("Chewbacca: Shield Power level now at %d%%\n", shield_power3);
 
             // Leia increases the shield power by 15
             printf("Leia: Adjusting shields...\n");
-            shield_power += 15;
-            printf("Leia: Shield Power level now at %d%%\n", shield_power);
+            int shield_power4 = shield_power + 15;
+            printf("Leia: Shield Power level now at %d%%\n", shield_power4);
 
     // Check if process creation failed
         // -----> Write you code here
