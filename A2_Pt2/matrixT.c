@@ -46,7 +46,7 @@ int main() {
 
     // Wait for all threads to complete
         // ------> write your code here
-    for (int i = 0; i < NUM_THREADS; i++){
+    for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 
@@ -54,6 +54,12 @@ int main() {
 
     // Display the resulting matrix C
     // displayMatrix(C, N);
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            printf ("%d ", C[i][j]);
+        }
+        printf("\n");
+    }
 
     // Free dynamically allocated memory
     for (int i = 0; i < N; ++i) {
