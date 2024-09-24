@@ -2,7 +2,7 @@
 #include <pthread.h>
 
 #define SIZE 1000000
-#define NUM_THREADS 4
+#define NUM_THREADS 1
 
 int arr[SIZE];
 int partialSums[NUM_THREADS] = {0}; // Array to store partial sums for each thread
