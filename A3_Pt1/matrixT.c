@@ -42,7 +42,6 @@ int main() {
     }
 
     // Wait for all threads to complete
-        // ------> write your code here
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
