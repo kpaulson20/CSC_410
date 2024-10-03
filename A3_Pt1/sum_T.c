@@ -2,21 +2,30 @@
 #include <pthread.h>
 
 #define SIZE 1000000
-#define NUM_THREADS 9
+#define NUM_THREADS 15
 
 int arr[SIZE];
-int partialSums[NUM_THREADS] = {0}; // Array to store partial sums for each thread
+long long totalSum;
+pthread_mutex_t lock;
 
 // Entry function for each thread
 void* sumPart(void* arg) {
     int thread_id = *(int*)arg;
     int chunk = SIZE / NUM_THREADS;
     int index_start = thread_id * chunk;
-    int index_end = (thread_id + 1) * chunk;
+    int index_end = (thread_id == NUM_THREADS - 1) ? SIZE : (thread_id +1) * chunk;
 
+    //Calculate local sum for thread
+    long long local = 0;
     for (int i = index_start; i < index_end; i++){
-        partialSums[thread_id] += arr[i];
+        local += arr[i];
     }
+
+    //Lock mutex
+    pthread_mutex_lock(&lock);
+    totalSum += local;
+    pthread_mutex_unlock(&lock);
+
     pthread_exit(NULL);
 }
 
@@ -29,26 +38,24 @@ int main() {
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS];
 
+    // Initialize mutex
+    pthread_mutex_init(&lock, NULL);
+
     // Create threads to compute partial sums
-    // ------> Write your code here
     for (int i = 0; i < NUM_THREADS; i++) {
         thread_ids[i] = i;
         pthread_create(&threads[i], NULL, sumPart, (void *)&thread_ids[i]);
     }
 
     // Wait for all threads to finish
-    // -------> Write your code here
     for (int i = 0; i < NUM_THREADS; i++){
         pthread_join(threads[i], NULL);
     }
-        
-    // Combine the partial sums from all threads
-    int totalSum = 0;
-    for (int i = 0; i < NUM_THREADS; i++) {
-        totalSum += partialSums[i];
-    }
 
-    printf("Total Sum: %d\n", totalSum);
+    printf("Total Sum: %lld\n", totalSum);
+
+    // Destroy mutex
+    pthread_mutex_destroy(&lock);
 
     return 0;
 }
