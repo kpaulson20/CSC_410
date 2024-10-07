@@ -20,6 +20,9 @@ int main() {
         return -1;
     }
 
+    //Initialize Barrier
+    pthread_barrier_init(&barrier, NULL, NUM_THREADS);
+
     // Initialize matrices A and B with values
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -37,6 +40,7 @@ int main() {
     for (int i = 0; i < NUM_THREADS; i++) {
         thread_data[i].thread_id = i;
         thread_data[i].num_rows = rows_per_thread;
+        thread_data[i].barrier = &barrier;
 
         pthread_create(&threads[i], NULL, matrixMultiplyThread, (void*)&thread_data[i]);
     }

@@ -3,14 +3,16 @@
 #include <pthread.h>
 
 #define N 10  // Size of the matrix
-#define NUM_THREADS 4  // Number of threads
+#define NUM_THREADS 2 // Number of threads
 
 int **A, **B, **C;  // Global matrices
+pthread_barrier_t barrier;
 
 // Information holder for each thread
 typedef struct {
     int thread_id;
-    int num_rows;  
+    int num_rows;
+    pthread_barrier_t* barrier;  
 } thread_data_t;
 
 // Function for each thread
@@ -31,6 +33,8 @@ void* matrixMultiplyThread(void* arg) {
             }
         }
     }
+    pthread_barrier_wait(data->barrier);
+
     pthread_exit(NULL);
 }
 
