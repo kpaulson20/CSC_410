@@ -22,7 +22,7 @@ void* sumPart(void* arg) {
         temp += arr[i];
     }
     pthread_mutex_lock(&lock);    
-    //temp = totalSum;
+    temp = totalSum;
     //sleep(rand()%2);
     totalSum += temp;
     pthread_mutex_unlock(&lock);
