@@ -4,10 +4,11 @@
 #include <unistd.h>
 
 #define SIZE 1000000
-#define NUM_THREADS 4
+#define NUM_THREADS 7
 
 long long arr[SIZE];
 long long totalSum = 0;
+pthread_mutex_t mutex;
 
 void* sumPart(void* arg) {
     int thread_id = *(int*)arg;
@@ -18,10 +19,14 @@ void* sumPart(void* arg) {
     long long temp;
     // Calculate partial sums
     for (int i = start; i < end; i++) {
+        pthread_mutex_lock(&mutex);
+
         temp = totalSum;
         temp += arr[i];
         // sleep(rand()%2);
         totalSum = temp;
+
+        pthread_mutex_unlock(&mutex);
     }
 
     pthread_exit(NULL);
@@ -34,6 +39,9 @@ int main() {
     }
 
     // srand(time(NULL));
+
+    pthread_mutex_init(&mutex, NULL);
+
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS];
 
@@ -47,6 +55,8 @@ int main() {
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
+
+    pthread_mutex_destroy(&mutex);
 
     // Print the total sum;
     printf("Total Sum: %lld\n", totalSum);
