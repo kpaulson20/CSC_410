@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #define SIZE 1000000
-#define NUM_THREADS 10
+#define NUM_THREADS 5
 
 long long arr[SIZE];
 long long totalSum = 0;
@@ -15,18 +15,19 @@ void* sumPart(void* arg) {
     int chunk_size = SIZE / NUM_THREADS;
     int start = thread_id * chunk_size;
     int end = (thread_id + 1) * chunk_size;
-
-    long long temp = 0;
+    if (thread_id == (NUM_THREADS - 1)) {
+        end = SIZE;
+    }
+    long long temp;
     // Calculate partial sums
     for (int i = start; i < end; i++) {
+        pthread_mutex_lock(&lock); // LOCK
+        temp = totalSum;
         temp += arr[i];
+        // sleep(rand()%2);
+        totalSum = temp;
+        pthread_mutex_unlock(&lock); // UNLOCK
     }
-    pthread_mutex_lock(&lock);    
-    temp = totalSum;
-    //sleep(rand()%2);
-    totalSum += temp;
-    pthread_mutex_unlock(&lock);
-    
     pthread_exit(NULL);
 }
 
@@ -35,9 +36,8 @@ int main() {
     for (int i = 0; i < SIZE; i++) {
         arr[i] = i + 1; 
     }
-    //srand(time(NULL));
     pthread_mutex_init(&lock, NULL);
-
+    // srand(time(NULL));
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS];
 
@@ -52,10 +52,9 @@ int main() {
         pthread_join(threads[i], NULL);
     }
 
-    pthread_mutex_destroy(&lock);
-
     // Print the total sum;
     printf("Total Sum: %lld\n", totalSum);
 
+    pthread_mutex_destroy(&lock);
     return 0;
 }
