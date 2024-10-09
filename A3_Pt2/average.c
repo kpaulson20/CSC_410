@@ -61,11 +61,13 @@ int main() {
     }
 
     // Phase 2: Calculate the total sum and average
-    //if (id == 0) { // Only the first thread calculates the final average
+    //if (int id == 0) { // Only the first thread calculates the final average
+    pthread_mutex_lock(&mutex);
     int total_sum = 0;
     for (int i = 0; i < NUM_THREADS; i++) {
         total_sum += partial_sums[i];
     }
+    pthread_mutex_unlock(&mutex);
     double average = (double)total_sum / ARRAY_SIZE;
     printf("Total sum is: %d, Average is: %.2f\n", total_sum, average);
     //}
