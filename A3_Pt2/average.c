@@ -10,6 +10,7 @@
 
 int numbers[ARRAY_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}; 
 int partial_sums[NUM_THREADS] = {0}; 
+pthread_mutex_t mutex; //Syncronization technique
 
 void* func(void* arg) {
     int id = *((int*)arg);
@@ -26,14 +27,18 @@ void* func(void* arg) {
 
 
     // Phase 2: Calculate the total sum and average
-    if (id == 0) { // Only the first thread calculates the final average
-        int total_sum = 0;
-        for (int i = 0; i < NUM_THREADS; i++) {
-            total_sum += partial_sums[i];
-        }
-        double average = (double)total_sum / ARRAY_SIZE;
-        printf("Total sum is: %d, Average is: %.2f\n", total_sum, average);
-    }
+    //if (id == 0) { // Only the first thread calculates the final average
+    //    pthread_mutex_lock(&mutex); // Lock mutex
+
+    //    int total_sum = 0;
+    //    for (int i = 0; i < NUM_THREADS; i++) {
+    //       total_sum += partial_sums[i];
+    //    }
+    //    double average = (double)total_sum / ARRAY_SIZE;
+    //    printf("Total sum is: %d, Average is: %.2f\n", total_sum, average);
+
+    //    pthread_mutex_unlock(&mutex); // Unlock mutex
+    //}
 
     return NULL;
 }
@@ -41,6 +46,9 @@ void* func(void* arg) {
 int main() {
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS] = {0, 1, 2, 3, 4};
+
+    // Initialize mutex
+    pthread_mutex_init(&mutex, NULL);
 
     // Create threads
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -52,5 +60,16 @@ int main() {
         pthread_join(threads[i], NULL);
     }
 
+    // Phase 2: Calculate the total sum and average
+    //if (id == 0) { // Only the first thread calculates the final average
+    int total_sum = 0;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        total_sum += partial_sums[i];
+    }
+    double average = (double)total_sum / ARRAY_SIZE;
+    printf("Total sum is: %d, Average is: %.2f\n", total_sum, average);
+    //}
+
+    pthread_mutex_destroy(&mutex);
     return 0;
 }
