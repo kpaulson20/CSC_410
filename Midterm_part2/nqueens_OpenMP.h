@@ -25,6 +25,7 @@ void solveNQueensUtil(int board[], int col, int n) {
 
     // Recursive case
     // write your code here
+    #pragma omp parallel for
     for (int i = 0; i < n; i++){
         if (isSafe(board, i, col, n)){
             board[col] = i;

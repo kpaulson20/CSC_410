@@ -1,10 +1,8 @@
-#include "nqueens-Pthread.h"
+#include "nqueens_OpenMP.h"
 
 int main() {
-    pthread_t thread;
     int n = 8;
     int* board = (int*)malloc(n * sizeof(int));
-
     if (board == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         return 1;

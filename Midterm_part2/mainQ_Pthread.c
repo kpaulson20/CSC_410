@@ -1,4 +1,4 @@
-#include "nqueens-OpenMP.h"
+#include "nqueens-Pthread.h"
 
 int main() {
     int n = 8;
