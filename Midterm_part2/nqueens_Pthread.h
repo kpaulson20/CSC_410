@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <string.h>
 
-#define THREADS 1
+#define THREADS 4
 
 typedef struct {
     int *board;
