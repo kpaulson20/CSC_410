@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <math.h>
 #include <pthread.h>
+#include <string.h>
+
+#define THREADS 1
 
 typedef struct {
     int *board;
@@ -17,6 +20,11 @@ bool isSafe(int board[], int row, int col, int n);
 void* threadSolveNQueens(void* arg);
 void solveNQueensUtil(int board[], int col, int n);
 void printBoard(int board[], int n);
+
+//Global Variables
+int currentThreads = 0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 bool isSafe(int board[], int row, int col, int n) {
     for (int i = 0; i < col; i++) {
@@ -36,6 +44,15 @@ void* threadSolveNQueens(void* arg) {
     // Call the solveNQueensUtil function
     solveNQueensUtil(board, col, n);
     
+    //Update thread count
+    pthread_mutex_lock(&mutex);
+    currentThreads--;
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mutex);
+
+    free(data->board);
+    free(data);
+
     return NULL;
 }
 
@@ -53,16 +70,21 @@ void solveNQueensUtil(int board[], int col, int n) {
 
             // Create a new thread for the next column
             ThreadData_t *newData = malloc(sizeof(ThreadData_t));
-            newData->board = board;
+            newData->board = malloc(n * sizeof(int));
+            memcpy(newData->board, board, n * sizeof(int));
             newData->col = col + 1;
             newData->n = n;
+
+            pthread_mutex_lock(&mutex);
+            while(currentThreads >= THREADS) {
+                pthread_cond_wait(&cond, &mutex);
+            }
+            currentThreads++;
+            pthread_mutex_unlock(&mutex);
 
             pthread_t thread;
             pthread_create(&thread, NULL, threadSolveNQueens, (void*)newData);
             pthread_detach(thread); // Detach the thread so we don't need to join
-
-            // For synchronization, wait for the current thread to complete
-            pthread_join(thread, NULL);
         }
     }
 }

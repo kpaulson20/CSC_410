@@ -1,5 +1,6 @@
 #include "nqueens_Pthread.h"
 
+
 int main() {
     int n = 8; // Size of the board
     int* board = (int*)malloc(n * sizeof(int));
