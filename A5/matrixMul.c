@@ -113,10 +113,11 @@ int main(int argc, char** argv) {
     free(localC);
 
     double end_time = MPI_Wtime();
-
-    double elapsed_time = start_time - end_time;
-    printf("Elapsed time: %f seconds\n", elapsed_time);
-
+    if (rank == 0) {
+        double elapsed_time = start_time - end_time;
+        printf("Elapsed time: %f seconds\n", elapsed_time);
+    }
+    
     MPI_Finalize();
     return 0;
 }
