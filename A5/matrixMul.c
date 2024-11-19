@@ -84,9 +84,7 @@ int main(int argc, char** argv) {
     }
 
     // Perform matrix multiplication for the assigned rows
-    if (rank == 0) {
-        matrixMultiply(A, B, localC, N, startRow, endRow);
-    }
+    matrixMultiply(A, B, localC, N, startRow, endRow);
 
     // Gather the results from all processes
     MPI_Gather(*localC, rowsPerProcess * N, MPI_INT, *C, rowsPerProcess * N, MPI_INT, 0, MPI_COMM_WORLD);
