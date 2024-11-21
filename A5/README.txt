@@ -4,8 +4,10 @@ calculates the multiplication of matricies A and
 B and stores them in a blank matrix C. integrate.c
 calculates the value of pi through the use of the
 trapezoidal rule. prime.c calculates all the prime
-numbers using Sieve Of Eratosthenes. I tries to
+numbers using Sieve Of Eratosthenes. I tried to
 time the programs using MPI_Wtime(), but I could
 only get so far in testing for two of the programs.
+The matrix program failed at 2 processes and the 
+prime program failed to calculate at 6 processes.
 
-Date 11/20/2024
+Date 11/22/2024
