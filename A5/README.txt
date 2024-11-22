@@ -7,7 +7,7 @@ trapezoidal rule. prime.c calculates all the prime
 numbers using Sieve Of Eratosthenes. I tried to
 time the programs using MPI_Wtime(), but I could
 only get so far in testing for two of the programs.
-The matrix program failed at 2 processes and the 
-prime program failed to calculate at 6 processes.
+The matrixMul.c program failed at 2 processes and the 
+prime.c program failed to calculate at 6 processes.
 
 Date 11/22/2024
