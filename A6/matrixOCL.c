@@ -10,18 +10,35 @@ __kernel void matrixMultiply(__global float* A,
                              __global float* B, 
                              __global float* C, 
                              const int N) {
+    // Define local memory for a block of the matrices
+    __local float Asub[16][16];
+    __local float Bsub[16][16];
+    
+    // Get row and column indices for the work item
     int row = get_global_id(0);
     int col = get_global_id(1);
     
-    // Initialize sum for this particular element of C
     float sum = 0.0;
     
-    // Perform the multiplication of the row of A and column of B
-    for (int k = 0; k < N; k++) {
-        sum += A[row * N + k] * B[k * N + col];
+    // Iterate over sub-blocks of A and B
+    for (int k = 0; k < N; k += 16) {
+        // Load a sub-matrix from global to local memory
+        Asub[get_local_id(0)][get_local_id(1)] = A[row * N + (k + get_local_id(1))];
+        Bsub[get_local_id(0)][get_local_id(1)] = B[(k + get_local_id(0)) * N + col];
+        
+        // Wait for all threads to load the sub-matrix
+        barrier(CLK_LOCAL_MEM_FENCE);
+        
+        // Multiply the sub-matrices
+        for (int n = 0; n < 16; n++) {
+            sum += Asub[get_local_id(0)][n] * Bsub[n][get_local_id(1)];
+        }
+        
+        // Wait for all threads to finish the computation for this block
+        barrier(CLK_LOCAL_MEM_FENCE);
     }
-
-    // Store the result in the corresponding position of C
+    
+    // Write the result back to global memory
     C[row * N + col] = sum;
 }
 )";
@@ -35,11 +52,6 @@ int main() {
     float *B = (float*)malloc(bytes);
     float *C = (float*)malloc(bytes);
 
-    if (!A || !B || !C) {
-        printf("Error allocating memory on the host\n");
-        return -1;
-    }
-
     // Initialize matrices A and B
     for (int i = 0; i < N * N; i++) {
         A[i] = 1.0f;
@@ -52,110 +64,54 @@ int main() {
     
     // Get platform
     cl_platform_id platform;
-    err = clGetPlatformIDs(1, &platform, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error getting platform IDs\n");
-        return -1;
-    }
+    clGetPlatformIDs(1, &platform, NULL);
 
     // Get device
     cl_device_id device;
-    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error getting device IDs\n");
-        return -1;
-    }
+    clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
 
     // Create OpenCL context
     cl_context context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
-    if (err != CL_SUCCESS || !context) {
-        printf("Error creating OpenCL context\n");
-        return -1;
-    }
 
     // Create command queue
     cl_command_queue queue = clCreateCommandQueue(context, device, 0, &err);
-    if (err != CL_SUCCESS || !queue) {
-        printf("Error creating command queue\n");
-        return -1;
-    }
 
     // Create program from source
     cl_program program = clCreateProgramWithSource(context, 1, &kernelSource, NULL, &err);
-    if (err != CL_SUCCESS || !program) {
-        printf("Error creating program\n");
-        return -1;
-    }
 
     // Build the program
-    err = clBuildProgram(program, 1, &device, NULL, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        char buildLog[1024];
-        clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, sizeof(buildLog), buildLog, NULL);
-        printf("Error in kernel compilation: %s\n", buildLog);
-        return -1;
-    }
+    clBuildProgram(program, 1, &device, NULL, NULL, NULL);
 
     // Create kernel
     cl_kernel kernel = clCreateKernel(program, "matrixMultiply", &err);
-    if (err != CL_SUCCESS || !kernel) {
-        printf("Error creating kernel\n");
-        return -1;
-    }
 
     // Create buffers
     cl_mem bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     cl_mem bufferB = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     cl_mem bufferC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, &err);
-    
-    if (err != CL_SUCCESS || !bufferA || !bufferB || !bufferC) {
-        printf("Error creating buffers\n");
-        return -1;
-    }
 
     // Write data to buffers
-    err = clEnqueueWriteBuffer(queue, bufferA, CL_TRUE, 0, bytes, A, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error writing to buffer A\n");
-        return -1;
-    }
-    
-    err = clEnqueueWriteBuffer(queue, bufferB, CL_TRUE, 0, bytes, B, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error writing to buffer B\n");
-        return -1;
-    }
+    clEnqueueWriteBuffer(queue, bufferA, CL_TRUE, 0, bytes, A, 0, NULL, NULL);
+    clEnqueueWriteBuffer(queue, bufferB, CL_TRUE, 0, bytes, B, 0, NULL, NULL);
 
     // Set kernel arguments
-    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &bufferA);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &bufferB);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &bufferC);
-    err |= clSetKernelArg(kernel, 3, sizeof(int), &N);
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), &bufferA);
+    clSetKernelArg(kernel, 1, sizeof(cl_mem), &bufferB);
+    clSetKernelArg(kernel, 2, sizeof(cl_mem), &bufferC);
+    clSetKernelArg(kernel, 3, sizeof(int), &N);
 
-    if (err != CL_SUCCESS) {
-        printf("Error setting kernel arguments\n");
-        return -1;
-    }
-
-    // Set global work size
-    size_t globalWorkSize[2] = {N, N};  // N x N matrix
+    // Set local work size (work-group size)
+    size_t localWorkSize[2] = {16, 16};  // 16x16 work-items per work-group
+    size_t globalWorkSize[2] = {N, N};  // N x N total work-items
 
     // Execute kernel
-    err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, NULL, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error launching kernel\n");
-        return -1;
-    }
+    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 
     // Wait for the kernel to finish
     clFinish(queue);
 
     // Read the result back into C
-    err = clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, bytes, C, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error reading from buffer C\n");
-        return -1;
-    }
+    clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, bytes, C, 0, NULL, NULL);
 
     // Print result (optional)
     // printf("Result Matrix:\n");
