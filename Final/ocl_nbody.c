@@ -108,24 +108,53 @@ int main() {
 
 
     // Create OpenCL buffers
-        // complete this
-        cl_mem bufferX = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
-        cl_mem bufferY = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
-        cl_mem bufferVX = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
-        cl_mem bufferVY = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, &err);
-        cl_mem bufferMASS = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+    // complete this
+    size_t bytes = NUM_BODIES * sizeof(Body);
+    cl_mem buffer_bodies = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    cl_mem buffer_fx = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUM_BODIES * sizeof(float), NULL, &err);
+    cl_mem buffer_fy = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUM_BODIES * sizeof(float), NULL, &err);
 
     // Create and build OpenCL program for the kernels
-        // complete this
-        cl_kernel kernel = clCreateKernel(program, "ocl_nbody", &err);
+    // complete this
+    const char *sources[2] = {kernel_source, update_kernel_source};
+    cl_program program = clCreateProgramWithSource(context, 2, sources, NULL, &err);
+    clBuildProgram(program, 1, &device, NULL, NULL, NULL);
+
+    cl_kernel compute_kernel = clCreateKernel(program, "compute_forces", &err);
+    cl_kernel update_kernel = clCreateKernel(program, "update_bodies", &err);
+
+    // Set kernel arguments for compute forces kernel
+    clSetKernelArg(compute_kernel, 0, sizeof(cl_mem), &buffer_bodies);
+    clSetKernelArg(compute_kernel, 1, sizeof(cl_mem), &buffer_fx);
+    clSetKernelArg(compute_kernel, 2, sizeof(cl_mem), &buffer_fy);
+    clSetKernelArg(compute_kernel, 3, sizeof(int), &NUM_BODIES);
+
+    // Set kernel arguments for update positions kernel
+    clSetKernelArg(update_kernel, 0, sizeof(cl_mem), &buffer_bodies);
+    clSetKernelArg(update_kernel, 1, sizeof(cl_mem), &buffer_fx);
+    clSetKernelArg(update_kernel, 2, sizeof(cl_mem), &buffer_fy);
+    clSetKernelArg(update_kernel, 3, sizeof(float), &DT);
+    clSetKernelArg(update_kernel, 4, sizeof(int), &NUM_BODIES);
 
     // Main simulation loop
     for (int step = 0; step < 1000; step++) {
         // complete this
+        // Write bodies data to the buffer
+        clEnqueueWriteBuffer(queue, buffer_bodies, CL_TRUE, 0, bytes, bodies, 0, NULL, NULL);
+
+        // Execute the compute forces kernel
+        size_t global_work_size = NUM_BODIES;
+        clEnqueueNDRangeKernel(queue, compute_kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+        clFinish(queue);
+
+        // Execute the update positions kernel
+        clEnqueueNDRangeKernel(queue, update_kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+        clFinish(queue);
     }
 
     // Get result
-        // complete this
+    // complete this
+    clEnqueueReadBuffer(queue, buffer_bodies, CL_TRUE, 0, bytes, bodies, 0, NULL, NULL);
 
     // Print final positions and velocities
     for (int i = 0; i < NUM_BODIES; i++) {

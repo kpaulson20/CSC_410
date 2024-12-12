@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 
 #define G 6.67430e-11  // Gravitational constant 
 #define NUM_BODIES 1000    // Number of bodies in the system
@@ -72,24 +73,58 @@ void print_positions(Body bodies[], int num_bodies) {
     printf("\n");
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    int rank, size;
+
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
     Body bodies[NUM_BODIES];
-    
-    // Initializing position, velocity, and mass for each body
-    for (int i = 0; i < NUM_BODIES; i++) {
-        bodies[i].x = rand() % 1000000000; 
-        bodies[i].y = rand() % 1000000000;  
-        bodies[i].vx = (rand() % 100 - 50) * 1e3; 
-        bodies[i].vy = (rand() % 100 - 50) * 1e3; 
-        bodies[i].mass = (rand() % 100 + 1) * 1e24; 
+
+    // Root process initializes bodies
+    if (rank == 0) {
+        for (int i = 0; i < NUM_BODIES; i++) {
+            bodies[i].x = rand() % 1000000000; 
+            bodies[i].y = rand() % 1000000000;  
+            bodies[i].vx = (rand() % 100 - 50) * 1e3; 
+            bodies[i].vy = (rand() % 100 - 50) * 1e3; 
+            bodies[i].mass = (rand() % 100 + 1) * 1e24; 
+        }
     }
+    
+    // Broadcast data from bodies to all processes
+    MPI_Bcast(bodies, sizeof(bodies), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+    double start_time = MPI_Wtime();
 
     // Simulate for 1000 steps
     for (int step = 0; step < 1000; step++) {
-        printf("Step %d:\n", step);
-        print_positions(bodies, NUM_BODIES);
-        update_bodies(bodies, NUM_BODIES, DT);
+        if (rank == 0){
+            printf("Step %d:\n", step);
+        }
+
+        int chunk_size = NUM_BODIES / size;
+        int start = rank * chunk_size;
+        int end = (rank == size - 1) ? NUM_BODIES : start + chunk_size;
+
+        update_bodies(&bodies[start], end - start, DT);
+
+        // Gather results from processes
+        MPI_Gather(&bodies[start], chunk_size * sizeof(Body), MPI_BYTE, bodies,
+        chunk_size * sizeof(Body), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+        // Root process print postions 
+        if (rank == 0) {
+            print_positions(bodies, NUM_BODIES);
+        }
     }
 
+    double end_time = MPI_Wtime();
+    if (rank == 0) {
+        double elapsed_time = end_time - start_time;
+        printf("Time taken: %.2f seconds\n", elapsed_time);
+    }
+    MPI_Finalize();
     return 0;
 }

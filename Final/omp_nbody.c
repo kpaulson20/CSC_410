@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 
 #define G 6.67430e-11  // Gravitational constant 
 #define NUM_BODIES 1000    // Number of bodies in the system
@@ -38,13 +39,12 @@ void compute_gravitational_force(Body *b1, Body *b2, double *fx, double *fy) {
 
 // Update positions and velocities of the bodies
 void update_bodies(Body bodies[], int num_bodies, double dt) {
-    double fx, fy;
-    
+    #pragma omp parallel for
     // Calculate the forces on each body
-    for (int i = 0; i < num_bodies; i++) {
-        fx = 0.0;
-        fy = 0.0;
-        
+    for (int i = 0; i <num_bodies; i++) {
+        double fx = 0.0;
+        double fy = 0.0;
+    
         // Summation of all forces on that body
         for (int j = 0; j < num_bodies; j++) {
             if (i != j) {
@@ -57,6 +57,7 @@ void update_bodies(Body bodies[], int num_bodies, double dt) {
     }
     
     // Update the positions based on the velocities
+    #pragma omp parallel for
     for (int i = 0; i < num_bodies; i++) {
         bodies[i].x += bodies[i].vx * dt;
         bodies[i].y += bodies[i].vy * dt;
@@ -84,12 +85,19 @@ int main() {
         bodies[i].mass = (rand() % 100 + 1) * 1e24; 
     }
 
+    double start_time = omp_get_wtime();
+
     // Simulate for 1000 steps
     for (int step = 0; step < 1000; step++) {
         printf("Step %d:\n", step);
         print_positions(bodies, NUM_BODIES);
         update_bodies(bodies, NUM_BODIES, DT);
     }
+
+    double end_time = omp_get_wtime();
+    double elapsed_time = end_time - start_time;
+
+    printf("Time taken: %.2f seconds\n", elapsed_time);
 
     return 0;
 }
