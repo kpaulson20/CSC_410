@@ -109,9 +109,15 @@ int main() {
 
     // Create OpenCL buffers
         // complete this
+        cl_mem bufferX = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+        cl_mem bufferY = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+        cl_mem bufferVX = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+        cl_mem bufferVY = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, &err);
+        cl_mem bufferMASS = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
 
     // Create and build OpenCL program for the kernels
         // complete this
+        cl_kernel kernel = clCreateKernel(program, "ocl_nbody", &err);
 
     // Main simulation loop
     for (int step = 0; step < 1000; step++) {
